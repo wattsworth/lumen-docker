@@ -1,0 +1,59 @@
+ARG RUBY_VERSION=3.2.0
+
+FROM ruby:$RUBY_VERSION-slim
+
+# Install dependencies
+RUN apt-get update -qq && apt-get install -y build-essential libvips gnupg2 curl git pkg-config postgresql-client libpq-dev
+
+# Ensure node.js 18 is available for apt-get
+ARG NODE_MAJOR=18
+RUN curl -sL https://deb.nodesource.com/setup_$NODE_MAJOR.x | bash -
+
+# Install node and yarn
+RUN apt-get update -qq && apt-get install -y nodejs && npm install -g yarn
+
+# Mount $PWD to this workdir
+WORKDIR /rails
+
+# Ensure gems are installed on a persistent volume and available as bins
+VOLUME /bundle
+RUN bundle config set --global path '/bundle'
+ENV PATH="/bundle/ruby/$RUBY_VERSION/bin:${PATH}"
+
+# Install Rails
+RUN gem install rails bundler
+
+# Copy in the application
+RUN git clone https://github.com/wattsworth/lumen-api.git  /rails
+ENV BUNDLER_WITHOUT development test
+RUN bundle install
+
+# Copy in the custom configuration files
+COPY production_config.rb /rails/config/environments/production.rb
+COPY database.yml /rails/config/database.yml
+COPY secrets.yml /rails/config/secrets.yml
+COPY smtp_initializer.rb /rails/config/initializers/smtp_init.rb
+
+# Set the environment to production
+ENV RAILS_ENV=production
+
+# Set the custom environment variables
+ENV SEND_EMAILS=false
+#ENV SMTP_ADDRESS=smtp.gmail.com
+#ENV SMTP_PORT=587
+#ENV SMTP_DOMAIN=example.com
+#ENV SMTP_USERNAME="test"
+#ENV SMTP_PASSWORD="test"
+#ENV SMTP_AUTHENTICATION=plain
+#ENV SMTP_ENABLE_STARTTLS_AUTO=true
+
+# --CHANGE THIS VALUE IN PRODUCTION!--
+ENV SECRET_KEY_BASE="dea552246b8c55bc73e3b8a587f04966d1ed7b35d81341ced18263823867ac95"
+
+ENV DATABASE_URL="postgresql://postgres:postgres@db:5432/lumen"
+ENV BANNER="Lumen Docked"
+# Ensure binding is always 0.0.0.0, even in development, to access server from outside container
+ENV BINDING="0.0.0.0"
+
+# Overwrite ruby image's entrypoint to provide open cli
+ENTRYPOINT [""]
