@@ -1,9 +1,16 @@
 ARG RUBY_VERSION=3.2.0
 
-FROM ruby:$RUBY_VERSION-slim
+FROM node:18 as node
+WORKDIR /app
+RUN git clone https://github.com/wattsworth/lumen-client.git /app
+RUN npm install
+RUN npm run build --omit=dev
 
+FROM phusion/passenger-ruby32
 # Install dependencies
-RUN apt-get update -qq && apt-get install -y build-essential libvips gnupg2 curl git pkg-config postgresql-client libpq-dev
+RUN apt-get update -qq && apt-get install -y build-essential libvips gnupg2 curl git pkg-config postgresql-client libpq-dev nginx
+
+COPY --from=node /app/dist/lumen /usr/share/nginx/html
 
 # Ensure node.js 18 is available for apt-get
 ARG NODE_MAJOR=18
@@ -13,27 +20,42 @@ RUN curl -sL https://deb.nodesource.com/setup_$NODE_MAJOR.x | bash -
 RUN apt-get update -qq && apt-get install -y nodejs && npm install -g yarn
 
 # Mount $PWD to this workdir
-WORKDIR /rails
-
+WORKDIR /home/app
+ENV APP_DIR=/home/app
 # Ensure gems are installed on a persistent volume and available as bins
-VOLUME /bundle
-RUN bundle config set --global path '/bundle'
-ENV PATH="/bundle/ruby/$RUBY_VERSION/bin:${PATH}"
+#VOLUME /bundle
+#RUN bundle config set --global path '/bundle'
+#ENV PATH="/bundle/ruby/$RUBY_VERSION/bin:${PATH}"
 
 # Install Rails
 RUN gem install rails bundler
 
 # Copy in the application
-RUN git clone https://github.com/wattsworth/lumen-api.git  /rails
+USER app
+RUN git init
+RUN git remote add origin https://github.com/wattsworth/lumen-api.git
+RUN git fetch
+RUN git checkout origin/master -ft
 ENV BUNDLER_WITHOUT development test
+USER root
 RUN bundle install
 
 # Copy in the custom configuration files
-COPY production_config.rb /rails/config/environments/production.rb
-COPY database.yml /rails/config/database.yml
-COPY secrets.yml /rails/config/secrets.yml
-COPY smtp_initializer.rb /rails/config/initializers/smtp_init.rb
+USER app
+COPY api/production_config.rb $APP_DIR/config/environments/production.rb
+COPY api/database.yml $APP_DIR/config/database.yml
+COPY api/secrets.yml $APP_DIR/config/secrets.yml
+COPY api/smtp_initializer.rb $APP_DIR/config/initializers/smtp_init.rb
 
+# Set the ownership to app user
+USER root
+RUN chown -R app:app $APP_DIR
+
+# Copy in the nginx configuration files
+
+ADD nginx/lumen.conf /etc/nginx/sites-enabled/lumen.conf
+ADD nginx/map.conf /etc/nginx/conf.d/map.conf
+RUN rm /etc/nginx/sites-enabled/default
 # Set the environment to production
 ENV RAILS_ENV=production
 
@@ -50,10 +72,16 @@ ENV SEND_EMAILS=false
 # --CHANGE THIS VALUE IN PRODUCTION!--
 ENV SECRET_KEY_BASE="dea552246b8c55bc73e3b8a587f04966d1ed7b35d81341ced18263823867ac95"
 
-ENV DATABASE_URL="postgresql://postgres:postgres@db:5432/lumen"
-ENV BANNER="Lumen Docked"
-# Ensure binding is always 0.0.0.0, even in development, to access server from outside container
-ENV BINDING="0.0.0.0"
+ENV DATABASE_HOST="postgres"
+ENV DATABASE_NAME="rails"
+ENV DATABASE_USERNAME="rails"
+ENV DATABASE_PASSWORD="rails"
+#RUN bin/rails db:migrate
 
-# Overwrite ruby image's entrypoint to provide open cli
-ENTRYPOINT [""]
+ENV BANNER="Lumen Docked"
+
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
+
+# Enable Nginx and Passenger
+RUN rm -f /etc/service/nginx/down
