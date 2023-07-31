@@ -13,6 +13,8 @@ https://docs.docker.com/compose/install/
 
     $> docker-compose run api bin/rails db:migrate
 
-5. Host behind a reverse proxy to enable HTTPS
+5. Host behind a reverse proxy to enable HTTPS. Configuration files are provided in `/host`. The file `nginx-reverse-proxy.conf` provides a complete Nginx configuration. Just change the hostname and certificate information. If you want to host a Joule node on the same server these configurations can be merged by including the `nginx-joule` configuration and changing the user to `joule` which is required to access the Joule Unix sockets.
+
+To rebuild the Lumen container see the `/container` directory.
 
 See https://wattsworth.net/lumen/index.html more information
