@@ -8,7 +8,7 @@ RUN npm run build --omit=dev
 
 FROM phusion/passenger-ruby32
 # Install dependencies
-RUN apt-get update -qq && apt-get install -y build-essential libvips gnupg2 curl git pkg-config postgresql-client libpq-dev nginx
+RUN apt-get update -qq && apt-get install -y build-essential libvips gnupg2 curl git pkg-config postgresql-client libpq-dev nginx gettext
 
 COPY --from=node /app/dist/lumen /usr/share/nginx/html
 
@@ -22,10 +22,7 @@ RUN apt-get update -qq && apt-get install -y nodejs && npm install -g yarn
 # Mount $PWD to this workdir
 WORKDIR /home/app
 ENV APP_DIR=/home/app
-# Ensure gems are installed on a persistent volume and available as bins
-#VOLUME /bundle
-#RUN bundle config set --global path '/bundle'
-#ENV PATH="/bundle/ruby/$RUBY_VERSION/bin:${PATH}"
+
 
 # Install Rails
 RUN gem install rails bundler
@@ -53,9 +50,10 @@ RUN chown -R app:app $APP_DIR
 
 # Copy in the nginx configuration files
 
-ADD nginx/lumen.conf /etc/nginx/sites-enabled/lumen.conf
-ADD nginx/map.conf /etc/nginx/conf.d/map.conf
+ADD nginx/lumen.conf /etc/nginx/templates/lumen.conf.template
 RUN rm /etc/nginx/sites-enabled/default
+COPY scripts/* /etc/my_init.d
+RUN chmod +x /etc/my_init.d/*
 # Set the environment to production
 ENV RAILS_ENV=production
 
@@ -76,7 +74,6 @@ ENV DATABASE_HOST="postgres"
 ENV DATABASE_NAME="rails"
 ENV DATABASE_USERNAME="rails"
 ENV DATABASE_PASSWORD="rails"
-#RUN bin/rails db:migrate
 
 ENV BANNER="Lumen Docked"
 
