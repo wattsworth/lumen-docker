@@ -54,7 +54,7 @@ Rails.application.configure do
 
   # Ignore bad email addresses and do not raise email delivery errors.
   # Set this to true and configure the email server for immediate delivery to raise delivery errors.
-  # config.action_mailer.raise_delivery_errors = false
+  config.action_mailer.raise_delivery_errors = true
 
   # Enable locale fallbacks for I18n (makes lookups for any locale fall back to
   # the I18n.default_locale when a translation cannot be found).
@@ -91,6 +91,12 @@ Rails.application.configure do
   #
   config.send_emails = ENV["SEND_EMAILS"].present?
 
+  if config.send_emails
+    config.action_mailer.perform_deliveries = true
+    config.action_mailer.perform_caching = false
+    config.action_mailer.delivery_method = :smtp
+    config.action_mailer.default_url_options = {:host => ENV["HOSTNAME"]}
+  end
 
   # Inserts middleware to perform automatic connection switching.
   # The `database_selector` hash is used to pass options to the DatabaseSelector

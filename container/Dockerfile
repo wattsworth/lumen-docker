@@ -10,6 +10,9 @@ FROM phusion/passenger-ruby32
 # Install dependencies
 RUN apt-get update -qq && apt-get install -y build-essential libvips gnupg2 curl git pkg-config postgresql-client libpq-dev nginx gettext
 
+# Upgrade container to the latest version
+RUN apt-get update && apt-get upgrade -y -o Dpkg::Options::="--force-confold"
+
 COPY --from=node /app/dist/lumen /usr/share/nginx/html
 
 # Ensure node.js 18 is available for apt-get
@@ -78,7 +81,6 @@ ENV DATABASE_PASSWORD="rails"
 ENV BANNER="Lumen Docked"
 
 RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
-
 
 # Enable Nginx and Passenger
 RUN rm -f /etc/service/nginx/down
