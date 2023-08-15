@@ -34,6 +34,7 @@ services:
       BANNER: ${BANNER}
       HOSTNAME: ${HOSTNAME}
       SUBDOMAIN_APPS: ${SUBDOMAIN_APPS}
+      PASSENGER_APP_ENV: ${RAILS_ENV}
       RAILS_ENV: ${RAILS_ENV}
 
     restart: always
