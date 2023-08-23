@@ -20,7 +20,7 @@ https://docs.docker.com/compose/install/
 **Add Joule Nodes:** Assuming Joule is running on the same machine and you are an authorized joule user, run the command:
     `$> joule master add lumen http://localhost:8080/lumen`
 
-When adding the first node you will be prompted to create a new username and password, subsequent nodes will require an authorization token. Generate this token by clicking the "New Installation" button on the Lumen admin page.
+When adding the first node you will be prompted to create a new username and password, subsequent nodes will require an authorization token. Generate this token by clicking the "New Installation" button on the Lumen admin page. If there is an error contacting the node through the Lumen interface you may need to alter the IP address of the node to match your configuration. For example if you are running Joule in a Docker container the IP address will likely be the localhost and should instead by the Docker host (typically 172.17.0.1).
 
 **Host behind a reverse proxy to enable HTTPS:** Configuration files are provided in `/host`. The file `nginx-reverse-proxy.conf` provides a complete Nginx configuration. Just change the hostname and certificate information. If you want to host a Joule node on the same server these configurations can be merged by including the `nginx-joule` configuration and changing the user to `joule` which is required to access the Joule Unix sockets.
 
