@@ -2,6 +2,7 @@ ARG RUBY_VERSION=3.2.0
 
 FROM node:18 as node
 WORKDIR /app
+ADD https://api.github.com/repos/wattsworth/lumen-client/git/refs/heads/master /tmp/client-version.json
 RUN git clone https://github.com/wattsworth/lumen-client.git /app
 RUN npm install
 RUN npm run build --omit=dev
@@ -33,6 +34,7 @@ RUN gem install rails bundler
 # Copy in the application
 USER app
 RUN git init
+ADD https://api.github.com/repos/wattsworth/lumen-api/git/refs/heads/master /tmp/api-version.json
 RUN git remote add origin https://github.com/wattsworth/lumen-api.git
 RUN git fetch
 RUN git checkout origin/master -ft
