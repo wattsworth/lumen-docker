@@ -9,7 +9,7 @@ RUN npm run build --omit=dev
 
 FROM phusion/passenger-ruby32
 # Install dependencies
-RUN apt-get update -qq && apt-get install -y build-essential libvips gnupg2 curl git pkg-config postgresql-client libpq-dev nginx gettext
+RUN apt-get update -qq && apt-get install -y build-essential libvips gnupg2 curl git pkg-config postgresql-client libpq-dev nginx gettext imagemagick
 
 # Upgrade container to the latest version
 RUN apt-get update && apt-get upgrade -y -o Dpkg::Options::="--force-confold"
