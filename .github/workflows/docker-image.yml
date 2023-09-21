@@ -2,6 +2,8 @@
 name: docker-multi-arch-push
 on:
   push:
+    tags:
+      - '*'
     branches:
       - 'release'
 jobs:
@@ -25,7 +27,9 @@ jobs:
         with:
           username: ${{ secrets.DOCKER_HUB_USER }}
           password: ${{ secrets.DOCKER_HUB_TOKEN }}
-
+      - name: Test workflow
+        run: |
+          echo "Here is the tag name: ${{ github.ref_name }}"
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v3
@@ -37,8 +41,7 @@ jobs:
           tags: wattsworth/lumen:latest
           
       - name: Push Git Tag Image
-        if: startsWith(github.ref, 'refs/tags')
         run: |
-          docker tag wattsworth/lumen:latest wattsworth/lumen:${{ github.event.release.tag_name }}
-          docker push wattsworth/lumen:${{ github.event.release.tag_name }}
+          docker tag wattsworth/lumen:latest wattsworth/lumen:${{ github.ref_name }}
+          docker push wattsworth/lumen:${{ github.ref_name }}
       
