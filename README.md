@@ -9,11 +9,11 @@ https://docs.docker.com/compose/install/
 
    `$> docker compose up`
 
-4. Configure the database (first run only, must be executed while containers are running and in the same directory as the compose file):
+   or
 
-    `$> docker compose run lumen bin/rails db:migrate`
+   `$> docker buildx build --push --platform linux/amd64,linux/arm64 --tag wattsworth/lumen:latest`
 
-5. The site should be available at http://localhost:8080 assuming the default configuration in the compose file.
+4. The site should be available at http://localhost:8080 assuming the default configuration in the compose file.
    
 ## Next Steps
 
