@@ -1,10 +1,11 @@
 ARG RUBY_VERSION=3.2.0
 
-FROM node:18 as node
+FROM node:20 as node
 WORKDIR /app
 ADD https://api.github.com/repos/wattsworth/lumen-client/git/refs/heads/master /tmp/client-version.json
 RUN git clone https://github.com/wattsworth/lumen-client.git /app
-RUN npm install
+RUN npm install -g npm@10.5.0
+RUN npm install --maxsockets=1
 RUN npm run build --omit=dev
 
 FROM phusion/passenger-ruby32
@@ -20,8 +21,8 @@ COPY --from=node /app/dist/lumen /usr/share/nginx/html
 ARG NODE_MAJOR=18
 RUN curl -sL https://deb.nodesource.com/setup_$NODE_MAJOR.x | bash -
 
-# Install node and yarn
-RUN apt-get update -qq && apt-get install -y nodejs && npm install -g yarn
+# Install node and yarn - removed && npm install -g yarn because it already exists?
+RUN apt-get update -qq && apt-get install -y nodejs 
 
 # Mount $PWD to this workdir
 WORKDIR /home/app
