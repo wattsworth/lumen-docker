@@ -1,24 +1,24 @@
-ARG RUBY_VERSION=3.2.0
+ARG RUBY_VERSION=3.4
 
-FROM node:20 as node
+FROM node:25 AS node
 WORKDIR /app
 ADD https://api.github.com/repos/wattsworth/lumen-client/git/refs/heads/master /tmp/client-version.json
 RUN git clone https://github.com/wattsworth/lumen-client.git /app
-RUN npm install -g npm@10.5.0
+RUN npm install -g npm@11.9.0
 RUN npm install --maxsockets=1
 RUN npm run build --omit=dev
 
-FROM phusion/passenger-ruby32
+FROM phusion/passenger-ruby34
 # Install dependencies
 RUN apt-get update -qq && apt-get install -y build-essential libvips gnupg2 curl git pkg-config postgresql-client libpq-dev nginx gettext imagemagick
 
 # Upgrade container to the latest version
 RUN apt-get update && apt-get upgrade -y -o Dpkg::Options::="--force-confold"
 
-COPY --from=node /app/dist/lumen /usr/share/nginx/html
+COPY --from=node /app/dist/lumen/browser /usr/share/nginx/html
 
-# Ensure node.js 18 is available for apt-get
-ARG NODE_MAJOR=18
+# Ensure node.js 22 is available for apt-get
+ARG NODE_MAJOR=25
 RUN curl -sL https://deb.nodesource.com/setup_$NODE_MAJOR.x | bash -
 
 # Install node and yarn - removed && npm install -g yarn because it already exists?
