@@ -5,13 +5,13 @@ https://docs.docker.com/compose/install/
 
 2. Configure environment variables, see instructions in sample.env
 
-3. Build the containers:
+3. Build the containers (make sure to cd into the ./container directory):
 
    `$> docker compose up`
 
    or
 
-   `$> docker buildx build --push --platform linux/amd64,linux/arm64 --tag wattsworth/lumen:latest`
+   `$> docker buildx build --push --platform linux/amd64,linux/arm64 --tag wattsworth/lumen:latest .`
 
 4. The site should be available at http://localhost:8080 assuming the default configuration in the compose file.
    
